@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { ANIMALS } from "@frontendmasters/pet";
+import React, { useState, useEffect } from "react";
+import pet, { ANIMALS } from "@frontendmasters/pet";
 import useDropdown from "./useDropdown";
 
 const SearchParams = () => {
@@ -8,7 +8,28 @@ const SearchParams = () => {
   const [location, setLocation] = useState("Seattle, WA");
   const [breeds, setBreeds] = useState([]);
   const [animal, AnimalDropdown] = useDropdown("Animal", "dog", ANIMALS);
-  const [breed, BreedDropdown] = useDropdown("Breed", "", breeds);
+  const [breed, BreedDropdown, setBreed] = useDropdown("Breed", "", breeds);
+
+  //This will occur asyncronously after the render happens in the dom
+  //Use effect is functionally scheduled to run after the returned component html is rendered
+  useEffect(() => {
+    setBreeds([]);
+    setBreed("");
+
+    //Writing in the dependencies for the effect will allow you to only re-render
+    //when the dependencies in this case change.
+
+    pet.breeds(animal).then(
+      ({ breeds: apiBreeds }) => {
+        //Note this is destructured here name is actually breedObj => breedObj.name
+        const breedStrings = apiBreeds.map(({ name }) => name);
+        setBreeds(breedStrings);
+      },
+      (error) => console.error(error)
+    );
+  }, [animal, setBreed, setBreeds]);
+  //basically if any of these things change, rerender
+  // else don't rerender
 
   return (
     <div className="search-params">
